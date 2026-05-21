@@ -1,4 +1,4 @@
-# ─── ExaDev Federation — Terraform variable values ─────────────────────────────
+# ─── Entra ID + Google Workspace SAML Federation — Terraform variable values ──
 #
 # Copy to terraform.tfvars and fill in real values, or set environment variables
 # using the TF_VAR_<name> convention:
