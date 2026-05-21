@@ -44,6 +44,7 @@ User → Microsoft Entra ID (service provider)
 
 | Resource | Provider | Purpose |
 |----------|----------|---------|
+| Domain creation + verification | `devops-rob/terracurl` | Add domains to tenant, retrieve DNS records, verify ownership |
 | App registration + service principal | `hashicorp/azuread` | Tenant-owned app for Graph API access |
 | Graph API role assignments | `hashicorp/azuread` | `User.ReadWrite.All`, `Domain.ReadWrite.All`, etc. |
 | Security defaults policy | `terraprovider/microsoft365wp` | Disable Entra security defaults (Google handles MFA) |
@@ -66,7 +67,7 @@ User → Microsoft Entra ID (service provider)
    - `UserAuthenticationMethod.Read.All`
    - `UserAuthenticationMethod.ReadWrite.All`
    - `Domain-InternalFederation.ReadWrite.All`
-3. **Verified domains** in the Entra tenant (federated domains must be added and verified before applying)
+3. Domains are created and verified by this Terraform config (see Usage below for the two-pass apply process)
 
 ### Google Workspace
 
@@ -90,13 +91,29 @@ The `hashicorp/azuread` provider v3.x removed `azuread_domain` and `azuread_doma
 
 ## Usage
 
-```bash
-# Copy the example variables file and fill in your values
-cp terraform.tfvars.example terraform.tfvars
+### First-time setup (two-pass apply)
 
+Domain verification requires adding DNS records between Terraform passes:
+
+```bash
 # Initialise providers
 terraform init
 
+# First pass: create domains, output verification DNS records
+terraform apply -target=terracurl_request.domain -target=data.terracurl_request.domain_verification_records
+
+# Review the domain_verification_records output. Add the TXT records
+to your DNS zone for each domain.
+
+# Second pass: verify domains and create all remaining resources
+terraform apply
+```
+
+### Subsequent applies
+
+Once domains are verified, a single `terraform apply` handles everything:
+
+```bash
 # Preview changes
 terraform plan
 

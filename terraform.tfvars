@@ -124,7 +124,7 @@ google_idp_signing_certificate = ""
 # Example:
 users = [
   { email = "alice@example.com", full_name = "Alice Smith" },
-  { email = "bob@example.com",   full_name = "Bob Jones" },
+  { email = "bob@example.com", full_name = "Bob Jones" },
   # Federated user — email domain matches federated_domains
   { email = "admin@example.onmicrosoft.com", full_name = "Tenant Admin" },
   # Managed user — email domain matches managed_domains
