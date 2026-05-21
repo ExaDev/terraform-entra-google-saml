@@ -3,8 +3,7 @@
 *.tfstate
 *.tfstate.backup
 
-# Sensitive variable values
-terraform.tfvars
+# Auto-loaded variable files (use environment variables for secrets)
 *.auto.tfvars
 
 # IDE
