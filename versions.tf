@@ -26,7 +26,7 @@ terraform {
 
   # Uncomment for remote state:
   # backend "s3" {
-  #   bucket = "exadev-terraform-state"
+  #   bucket = "example-terraform-state"
   #   key    = "federation/terraform.tfstate"
   #   region = "eu-west-2"
   # }

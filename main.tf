@@ -1,20 +1,18 @@
-# ExaDev Identity Federation — Terraform equivalent
+# Entra ID + Google Workspace SAML Federation
 #
-# This file represents the same infrastructure managed by InfraSync in
-# infra.config.ts. It covers:
+# Terraform configuration that provisions:
 #
 #   1. Microsoft Entra ID (Azure AD) tenant configuration
 #   2. Google Workspace SAML federation with Entra ID
 #   3. Custom user attributes for stable ImmutableID
 #   4. Per-user authentication method enforcement
 #
-# Generated from InfraSync state on 2026-05-20.
 #
 # Caveats:
 #   - Google SAML app configuration is manual (Google Admin Console uses
 #     Polymer/shadow DOM — no Terraform provider supports it)
 #   - Convergence guards (federation teardown before ImmutableID update)
-#     are an InfraSync engine feature with no Terraform equivalent
+#     have no Terraform equivalent (see Caveats in README)
 
 # ─── Variables ────────────────────────────────────────────────────────────────
 
@@ -25,13 +23,13 @@ variable "entra_tenant_id" {
 
 variable "entra_client_id" {
   type        = string
-  description = "Client ID for the InfraSync Entra management app"
+  description = "Client ID for the Entra management app registration"
 }
 
 variable "entra_client_secret" {
   type        = string
   sensitive   = true
-  description = "Client secret for the InfraSync Entra management app"
+  description = "Client secret for the Entra management app registration"
 }
 
 variable "federated_domains" {
@@ -79,7 +77,7 @@ variable "google_idp_signing_certificate" {
 
 variable "app_display_name" {
   type        = string
-  description = "Display name for the InfraSync Entra management app registration"
+  description = "Display name for the Entra management app registration"
 }
 
 variable "usage_location" {
@@ -153,26 +151,26 @@ locals {
   all_users_map = merge(local.federated_users_map, local.managed_users_map)
 }
 
-# ─── Entra ID: App Registration for InfraSync ────────────────────────────────
+# ─── Entra ID: App Registration ───────────────────────────────────────────────
 #
 # Tenant-owned app with client-credentials flow for Graph API management.
 # Required because Azure CLI's public client cannot request certain policy
 # scopes (AADSTS65002).
 
-resource "azuread_application" "infrasync_entra" {
+resource "azuread_application" "entra_management" {
   display_name = var.app_display_name
 }
 
-resource "azuread_service_principal" "infrasync_entra" {
-  client_id                    = azuread_application.infrasync_entra.client_id
+resource "azuread_service_principal" "entra_management" {
+  client_id                    = azuread_application.entra_management.client_id
   app_role_assignment_required = false
 }
 
-resource "azuread_service_principal_password" "infrasync_entra" {
-  service_principal_id = azuread_service_principal.infrasync_entra.object_id
+resource "azuread_service_principal_password" "entra_management" {
+  service_principal_id = azuread_service_principal.entra_management.object_id
 }
 
-resource "azuread_app_role_assignment" "infrasync_graph_roles" {
+resource "azuread_app_role_assignment" "graph_roles" {
   for_each = toset([
     "User.ReadWrite.All",
     "Domain.ReadWrite.All",
@@ -183,7 +181,7 @@ resource "azuread_app_role_assignment" "infrasync_graph_roles" {
     "Domain-InternalFederation.ReadWrite.All",
   ])
 
-  principal_object_id = azuread_service_principal.infrasync_entra.object_id
+  principal_object_id = azuread_service_principal.entra_management.object_id
   resource_object_id  = data.azuread_service_principal.microsoft_graph.object_id
   app_role_id = {
     for r in data.azuread_service_principal.microsoft_graph.app_roles : r.value => r.id
@@ -336,10 +334,9 @@ resource "terracurl_request" "domain_federation" {
 #
 # IMPORTANT: Updating onPremisesImmutableId for a federated user requires
 # temporarily removing the domain federation (Graph API rejects the update
-# with "You cannot update SourceAnchor value for federated user"). InfraSync
-# handles this automatically via convergence guards — Terraform has no
-# equivalent mechanism. If ImmutableID changes are needed, you must:
-#   1. Delete the azuread_domain_federation resource
+# with "You cannot update SourceAnchor value for federated user").
+# Terraform has no equivalent of convergence guards. If ImmutableID changes are needed, you must:
+#   1. Delete the domain federation resource
 #   2. Apply the user changes
 #   3. Recreate the federation resource
 
@@ -410,12 +407,12 @@ output "managed_user_count" {
   description = "Number of managed-domain users"
 }
 
-output "infrasync_app_client_id" {
-  value       = azuread_application.infrasync_entra.client_id
-  description = "Client ID of the InfraSync Entra management app"
+output "app_client_id" {
+  value       = azuread_application.entra_management.client_id
+  description = "Client ID of the Entra management app"
 }
 
-output "infrasync_sp_object_id" {
-  value       = azuread_service_principal.infrasync_entra.object_id
-  description = "Object ID of the InfraSync Entra service principal"
+output "sp_object_id" {
+  value       = azuread_service_principal.entra_management.object_id
+  description = "Object ID of the Entra management service principal"
 }

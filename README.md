@@ -131,7 +131,7 @@ The flow:
 ## Caveats
 
 - **Google SAML app is manual**: no Terraform provider can configure it (Google Admin Console uses Polymer/shadow DOM with no public API for SAML apps)
-- **ImmutableID changes require federation teardown**: updating `onPremisesImmutableId` for a federated user fails with "cannot update SourceAnchor". You must temporarily remove federation, update the user, then recreate federation. This is handled automatically by [InfraSync's convergence guards](https://github.com/example/infrasync) but has no Terraform equivalent
+- **ImmutableID changes require federation teardown**: updating `onPremisesImmutableId` for a federated user fails with "cannot update SourceAnchor". You must temporarily remove federation, update the user, then recreate federation. There is no Terraform-native mechanism for this.
 - **Auth method enforcement**: preventing users from registering Microsoft-side MFA methods (Microsoft Authenticator, phone, etc.) requires the tenant-wide authentication methods policy, which `microsoft365wp_authentication_methods_policy` can manage but is not included in this example
 
 ## Providers

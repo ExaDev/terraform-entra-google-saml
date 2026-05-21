@@ -24,7 +24,7 @@ data "terracurl_request" "google_token" {
 # terracurl_request resources for domain federation and other Graph API
 # operations that the azuread and microsoft365wp providers don't cover.
 #
-# Requests the full set of Graph API scopes granted to the InfraSync app.
+# Requests Graph API scopes for the tenant management app.
 data "terracurl_request" "entra_token" {
   name   = "entra_oauth_token"
   url    = "https://login.microsoftonline.com/${var.entra_tenant_id}/oauth2/v2.0/token"
