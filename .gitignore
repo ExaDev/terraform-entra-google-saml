@@ -1,0 +1,16 @@
+# Local Terraform state and provider cache
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Sensitive variable values
+terraform.tfvars
+*.auto.tfvars
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
