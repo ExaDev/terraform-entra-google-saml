@@ -1,17 +1,17 @@
 # Terraform: Entra ID + Google Workspace SAML Federation
 
-Terraform configuration for federating Microsoft Entra ID (Azure AD) domains to Google Workspace via SAML 2.0. Users in federated domains authenticate through Google — Entra delegates authentication entirely to the Google Workspace SAML identity provider.
+Terraform configuration for federating Microsoft Entra ID (Azure AD) domains to Google Workspace via SAML 2.0. Users in federated domains authenticate through Google. Entra delegates authentication entirely to the Google Workspace SAML identity provider.
 
 ## Why?
 
-If your organisation uses Google Workspace for email, calendar, and file storage, most of your users never interact with Microsoft services directly. But many enterprises still need Microsoft accounts — for Azure, Microsoft 365, Power Platform, Visual Studio, or partner ecosystems that require Entra ID credentials.
+If your organisation uses Google Workspace for email, calendar, and file storage, most of your users never interact with Microsoft services directly. But many enterprises still need Microsoft accounts for Azure, Microsoft 365, Power Platform, Visual Studio, or partner ecosystems that require Entra ID credentials.
 
 Without federation, every user maintains two separate identities with two separate passwords and two separate MFA registrations. This means:
 
-- **Credential fatigue** — users manage two sets of credentials, leading to weaker passwords and more helpdesk resets
-- **MFA conflicts** — Microsoft pushes Microsoft Authenticator; Google pushes Google's MFA. Users get confused about which to use when
-- **Provisioning overhead** — creating and deprovisioning users in two directories manually, with no guarantee they stay in sync
-- **Security gaps** — offboarded users may linger in one directory while being removed from the other
+- **Credential fatigue**: users manage two sets of credentials, leading to weaker passwords and more helpdesk resets
+- **MFA conflicts**: Microsoft pushes Microsoft Authenticator; Google pushes Google's MFA. Users get confused about which to use when
+- **Provisioning overhead**: creating and deprovisioning users in two directories manually, with no guarantee they stay in sync
+- **Security gaps**: offboarded users may linger in one directory while being removed from the other
 
 Federation solves this by making Google the single source of truth for authentication. When a user signs in to a Microsoft service:
 
@@ -20,15 +20,15 @@ Federation solves this by making Google the single source of truth for authentic
 3. Google sends a SAML assertion back to Microsoft
 4. Microsoft trusts the assertion and signs the user in
 
-The result: **one identity, one password, one MFA prompt** — enforced by Google, trusted by Microsoft.
+The result: **one identity, one password, one MFA prompt**, enforced by Google and trusted by Microsoft.
 
 ### Why not the other direction (Microsoft as IdP for Google)?
 
-Google Workspace has no equivalent of Entra's domain federation — you can't redirect `@example.com` sign-ins from Google to Microsoft. The federation direction is dictated by which system owns the email domain's MX records. If Google handles your mail, Google must be the IdP.
+Google Workspace has no equivalent of Entra's domain federation. You can't redirect `@example.com` sign-ins from Google to Microsoft. The federation direction is dictated by which system owns the email domain's MX records. If Google handles your mail, Google must be the IdP.
 
 ### Why not Azure AD Connect (directory synchronisation)?
 
-Azure AD Connect synchronises an on-premises Active Directory to Entra, but it requires a Windows Server running the sync agent. For organisations that are cloud-native (no on-premises AD), SAML federation is the correct approach — no sync agent, no password hash synchronisation, no server to maintain.
+Azure AD Connect synchronises an on-premises Active Directory to Entra, but it requires a Windows Server running the sync agent. For organisations that are cloud-native (no on-premises AD), SAML federation is the correct approach: no sync agent, no password hash synchronisation, no server to maintain.
 
 ## Architecture
 
@@ -120,7 +120,7 @@ export TF_VAR_google_idp_signing_certificate="..."
 
 ## ImmutableID Strategy
 
-Each federated user's `onPremisesImmutableId` is set to their Google Directory `id` — a stable numeric string that never changes, even if the user's primary email is renamed. This avoids the "cannot update SourceAnchor for federated user" restriction in Entra.
+Each federated user's `onPremisesImmutableId` is set to their Google Directory `id`, a stable numeric string that never changes even if the user's primary email is renamed. This avoids the "cannot update SourceAnchor for federated user" restriction in Entra.
 
 The flow:
 1. `googleworkspace_schema` creates a `microsoftEntra` custom schema with an `immutableId` field
@@ -130,9 +130,9 @@ The flow:
 
 ## Caveats
 
-- **Google SAML app is manual** — no Terraform provider can configure it (Google Admin Console uses Polymer/shadow DOM with no public API for SAML apps)
-- **ImmutableID changes require federation teardown** — updating `onPremisesImmutableId` for a federated user fails with "cannot update SourceAnchor". You must temporarily remove federation, update the user, then recreate federation. This is handled automatically by [InfraSync's convergence guards](https://github.com/example/infrasync) but has no Terraform equivalent
-- **Auth method enforcement** — preventing users from registering Microsoft-side MFA methods (Microsoft Authenticator, phone, etc.) requires the tenant-wide authentication methods policy, which `microsoft365wp_authentication_methods_policy` can manage but is not included in this example
+- **Google SAML app is manual**: no Terraform provider can configure it (Google Admin Console uses Polymer/shadow DOM with no public API for SAML apps)
+- **ImmutableID changes require federation teardown**: updating `onPremisesImmutableId` for a federated user fails with "cannot update SourceAnchor". You must temporarily remove federation, update the user, then recreate federation. This is handled automatically by [InfraSync's convergence guards](https://github.com/example/infrasync) but has no Terraform equivalent
+- **Auth method enforcement**: preventing users from registering Microsoft-side MFA methods (Microsoft Authenticator, phone, etc.) requires the tenant-wide authentication methods policy, which `microsoft365wp_authentication_methods_policy` can manage but is not included in this example
 
 ## Providers
 
