@@ -1,5 +1,7 @@
 # Terraform: Entra ID + Google Workspace SAML Federation
 
+[![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white)](https://github.com/ExaDev/terraform-entra-google-saml) [![CI](https://img.shields.io/github/actions/workflow/status/ExaDev/terraform-entra-google-saml/ci.yml?branch=main)](https://github.com/ExaDev/terraform-entra-google-saml/actions)
+
 Terraform configuration for federating Microsoft Entra ID (Azure AD) domains to Google Workspace via SAML 2.0. Users in federated domains authenticate through Google. Entra delegates authentication entirely to the Google Workspace SAML identity provider.
 
 ## Why?
